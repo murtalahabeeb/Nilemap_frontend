@@ -7,14 +7,27 @@ class Location {
   String name;
   String lat;
   String long;
+  int categoryId; //for now
   Category category;
+
   List<Room> rooms;
-  Location(this.id, this.name, this.lat, this.long,
-      [this.category, this.rooms]);
+  Location(
+    this.name,
+    this.lat,
+    this.long, [
+    this.category,
+    this.rooms,
+    this.id,
+  ]);
 
   room(List<dynamic> rooms) {
     return rooms.map((e) {
-      return Room(e['room_num'], e['room_name'], e['desc'], e['floor']);
+      return Room(
+          room_num: e['Room_no'],
+          room_name: e['room_name'],
+          desc: e['Desc'],
+          floor: e['Floor'],
+          category_id: e['category_id']);
     }).toList();
   }
 
@@ -23,17 +36,22 @@ class Location {
     this.name = map['Name'];
     this.lat = map['Latitude'];
     this.long = map['Longitude'];
+    this.categoryId = map['category_id'];
     //this.category = Category.fromjson(map['category']);
     //this.rooms = room(map['room']);
   }
 
   toJson() {
-    Map<String, dynamic> map;
+    Map<String, dynamic> map = {};
     map['Location_id'] = this.id;
-    map['Name'] = this.name;
-    map['Latitude'] = this.lat;
-    map['Longitude'] = this.long;
-    map['category_id'] = this.category.id;
+    map['lname'] = this.name;
+    map['latitude'] = this.lat;
+    map['longitude'] = this.long;
+    map['rooms'] = this.rooms.map((e) => e.toJson()).toList();
+    if (this.category != null) {
+      map['category_id'] = this.category.id;
+    }
+
     return map;
   }
 }

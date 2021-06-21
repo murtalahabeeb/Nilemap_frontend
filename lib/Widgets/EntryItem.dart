@@ -1,17 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:nilemap_frontend/Models/CategoryModel.dart';
-import 'package:nilemap_frontend/Screens/Navigationpage.dart';
+import 'package:nilemap_frontend/Widgets/admin_loc_view.dart';
+import 'package:nilemap_frontend/Widgets/admin_room_view.dart';
+import 'package:nilemap_frontend/Widgets/user_loc_view.dart';
+import 'package:nilemap_frontend/Widgets/user_room_view.dart';
 
 class ExpansionTileItems extends StatelessWidget {
-  const ExpansionTileItems(this.entry);
+  const ExpansionTileItems(this.entry, this.type);
   final Category entry;
-  Widget _buildTiles(Category root) {
-    // if (root.children.isEmpty) {
-    //   return ListTile(
-    //     title: Text(root.title),
-    //   );
-    // }
-  }
+  final String type;
+  // Widget _buildTiles(Category root) {
+  //   // if (root.children.isEmpty) {
+  //   //   return ListTile(
+  //   //     title: Text(root.title),
+  //   //   );
+  //   // }
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -21,42 +25,16 @@ class ExpansionTileItems extends StatelessWidget {
         children: [
           Column(
             children: entry.locations.map<Widget>((loc) {
-              return GestureDetector(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => Navigation(loc)),
-                    );
-                  },
-                  child: ListTile(
-                    title: Text(loc.name),
-                  ));
+              return type == "user"
+                  ? UserLocationView(loc)
+                  : AdminLocationView(loc);
             }).toList(),
           ),
           Column(
             children: entry.rooms.map<Widget>((room) {
-              return GestureDetector(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => Navigation(null, room)),
-                    );
-                  },
-                  child: ListTile(
-                    title: Text(room.room_name),
-                    subtitle: Row(
-                      children: [
-                        Text("Room ${room.room_num}"),
-                        SizedBox(
-                          width: 15.0,
-                        ),
-                        Text(room.location.name)
-                      ],
-                    ),
-                  ));
+              return type == "user" ? UserRoomView(room) : AdminRoomView(room);
             }).toList(),
-          )
+          ),
         ]);
   }
 }

@@ -1,13 +1,20 @@
+import 'dart:async';
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:nilemap_frontend/Logic/Location_notifier.dart';
 import 'package:nilemap_frontend/Logic/MapNotifier.dart';
 import 'package:nilemap_frontend/Models/LocationModel.dart';
 import 'package:nilemap_frontend/Models/RoomModel.dart';
 import 'package:nilemap_frontend/Widgets/Map.dart';
+import 'package:nilemap_frontend/Widgets/NavigationOptionsContainer.dart';
+import 'package:nilemap_frontend/Widgets/OvalContainer.dart';
 import 'package:nilemap_frontend/Widgets/currentButton.dart';
+import 'package:nilemap_frontend/Widgets/drawer.dart';
+import 'package:nilemap_frontend/Widgets/show_room.dart';
 import 'package:provider/provider.dart';
+import 'package:nilemap_frontend/Logic/backend_requests.dart';
+import 'package:nilemap_frontend/constants.dart' as Constants;
 
 class Navigation extends StatefulWidget {
   const Navigation([this.location, this.room]);
@@ -20,57 +27,59 @@ class Navigation extends StatefulWidget {
 class _NavigationState extends State<Navigation> {
   // Initial location of the Map view
   // CameraPosition _initialLocation = CameraPosition(target: LatLng(0.0, 0.0));
-  Set<Marker> markers = {};
+  StreamSubscription<Position> positionStream;
+  @override
+  void dispose() {
+    super.dispose();
+    positionStream.cancel();
+  }
+
   @override
   Widget build(BuildContext context) {
     var height = MediaQuery.of(context).size.height;
     var width = MediaQuery.of(context).size.width;
-
-    Marker startMarker = Marker(
-      markerId: MarkerId(LatLng(
-              widget.location == null
-                  ? double.parse(widget.room.location.lat)
-                  : double.parse(widget.location.lat),
-              widget.location == null
-                  ? double.parse(widget.room.location.long)
-                  : double.parse(widget.location.long))
-          .toString()),
-      position: LatLng(
-          widget.location == null
-              ? double.parse(widget.room.location.lat)
-              : double.parse(widget.location.lat),
-          widget.location == null
-              ? double.parse(widget.room.location.long)
-              : double.parse(widget.location.long)),
-      infoWindow: InfoWindow(
-        title: widget.location == null
-            ? widget.room.location.name
-            : widget.location.name,
-        snippet: LatLng(
-                widget.location == null
-                    ? double.parse(widget.room.location.lat)
-                    : double.parse(widget.location.lat),
-                widget.location == null
-                    ? double.parse(widget.room.location.long)
-                    : double.parse(widget.location.long))
-            .toString(),
-      ),
-      icon: BitmapDescriptor.defaultMarker,
-    );
-    markers.add(startMarker);
     // Determining the screen width & height
 
     return MultiProvider(
-      providers: [ChangeNotifierProvider(create: (_) => MapNotifier())],
+      providers: [
+        ChangeNotifierProvider(create: (_) => MapNotifier()),
+        FutureProvider<List<Room>>(
+          create: (context) {
+            return HttpService().getAllRoomsForALocation(widget.location == null
+                ? widget.room.location.id
+                : widget.location.id);
+          },
+          initialData: [],
+        )
+      ],
       child: Container(
         height: height,
         width: width,
         child: Scaffold(
+          appBar: AppBar(
+            title: Text(
+              widget.location == null
+                  ? "Building: ${widget.room.location.name}"
+                  : "Building: ${widget.location.name}",
+              style: TextStyle(color: Constants.textColor),
+            ),
+            backgroundColor: Constants.secTextColor,
+            iconTheme: IconThemeData(color: Constants.mainColor),
+          ),
+          drawer: MyDrawer(),
           body: Stack(
             children: <Widget>[
-              MapView(markers, widget.location),
+              Consumer<MapNotifier>(builder: (_, notifier, __) {
+                positionStream = notifier.positionStream;
+                return MapView(widget.location ?? widget.room.location);
+              }),
+              Align(
+                  alignment: Alignment.topCenter,
+                  child: _locationDetails(width)),
+              Align(
+                  alignment: Alignment.bottomCenter,
+                  child: OvalContainer(_navigationOptions())),
               CurrentButton(),
-              _buildTiles(width)
             ],
           ),
         ),
@@ -78,111 +87,141 @@ class _NavigationState extends State<Navigation> {
     );
   }
 
-  void _showDesc() {
+  void _showDesc(Room room) {
     showModalBottomSheet(
         context: context,
         builder: (context) {
           return Container(
-            padding: EdgeInsets.symmetric(vertical: 20.0, horizontal: 60.0),
-            child: Text(widget.room.floor + " floor, " + widget.room.desc,
-                style: TextStyle(fontSize: 20.0)),
+            child: ListTile(
+                title: Text(room.floor + " floor - " + room.desc,
+                    style: TextStyle(fontSize: 20.0)),
+                subtitle: Text(room.floor)),
           );
         });
   }
 
-  void _showRooms(LocationNotifier notifier) {
+  void _showRooms() {
     showModalBottomSheet(
         context: context,
         builder: (context) {
-          return Container(
-            //padding: EdgeInsets.symmetric(vertical: 0.0, horizontal: 60.0),
-            child: Consumer<LocationNotifier>(
-              builder: (_, notifier, __) {
-                return ListView.builder(
-                    itemCount: notifier.roomList.length,
-                    itemBuilder: (context, index) {
-                      return ListTile(
-                          title: Text(
-                        notifier.roomList[index].room_name,
-                        style: TextStyle(color: Colors.black, fontSize: 20.0),
-                      ));
-                    });
-              },
-            ),
-          );
-        });
-  }
-
-  Widget _buildTiles(width) {
-    return SafeArea(
-      child: Align(
-        alignment: Alignment.topCenter,
-        child: Padding(
-          padding: const EdgeInsets.only(top: 10.0),
-          child: Container(
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.9),
-              borderRadius: BorderRadius.all(
-                Radius.circular(20.0),
+          return FutureProvider<List<Room>>(
+            create: (context) {
+              return HttpService().getAllRoomsForALocation(
+                  widget.location == null
+                      ? widget.room.location.id
+                      : widget.location.id);
+            },
+            initialData: null,
+            child: Container(
+              //padding: EdgeInsets.symmetric(vertical: 0.0, horizontal: 60.0),
+              child: Consumer<List<Room>>(
+                builder: (_, rooms, __) {
+                  if (rooms == null) {
+                    return Center(child: CircularProgressIndicator());
+                  } else if (rooms.isEmpty) {
+                    return Center(
+                      child: Text("This location has no room"),
+                    );
+                  } else {
+                    return ListView.builder(
+                        itemCount: rooms.length,
+                        itemBuilder: (context, index) {
+                          return ShowRoom(
+                            room: rooms[index],
+                            type: "user",
+                          );
+                        });
+                  }
+                },
               ),
             ),
-            width: width * 0.9,
-            child: Padding(
-              padding: const EdgeInsets.only(top: 10.0, bottom: 10.0),
+          );
+        });
+  }
+
+  Widget _navigationOptions() {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        NavigationOptionsButtons(),
+      ],
+    );
+  }
+
+  Widget _locationDetails(width) {
+    return Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: Card(
+            child: Consumer<Map<String, dynamic>>(builder: (_, notifier, __) {
+          return Consumer<MapNotifier>(builder: (_, value, __) {
+            return widget.location == null
+                ? _forRooms(value)
+                : _forlocations(value);
+          });
+        })));
+  }
+
+  _forRooms(MapNotifier value) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        ListTile(
+            tileColor: Colors.white.withOpacity(0.9),
+            title: Padding(
+                padding: const EdgeInsets.only(bottom: 12.0),
+                child: Text("Room No: ${widget.room.room_num}",
+                    style: TextStyle(fontSize: 20.0))),
+            subtitle: Text('${value.placeDistance} km'),
+            trailing: FlatButton(
+              color: Colors.transparent,
+              onPressed: () {
+                _showDesc(widget.room);
+              },
               child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: <Widget>[
-                  Text(
-                    widget.location == null
-                        ? widget.room.location.name
-                        : widget.location.name,
-                    style: TextStyle(fontSize: 20.0),
+                children: [
+                  Icon(
+                    Icons.description,
+                    color: Colors.blue,
                   ),
-                  widget.location == null
-                      ? Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                          children: [
-                            Text(
-                              widget.room.room_name,
-                              style: TextStyle(fontSize: 15.0),
-                            ),
-                            Text(
-                              'Room ${widget.room.room_num}',
-                              style: TextStyle(fontSize: 15.0),
-                            ),
-                          ],
-                        )
-                      : Consumer<LocationNotifier>(builder: (_, notifier, __) {
-                          return FlatButton(
-                            onPressed: () {
-                              notifier.getLocRoom(widget.location.id);
-                              _showRooms(notifier);
-                            },
-                            child: Text(
-                              'Rooms',
-                              style:
-                                  TextStyle(fontSize: 20.0, color: Colors.blue),
-                            ),
-                            color: Colors.transparent,
-                          );
-                        }),
-                  widget.location == null
-                      ? FlatButton(
-                          onPressed: _showDesc,
-                          child: Text(
-                            'Description',
-                            style:
-                                TextStyle(fontSize: 20.0, color: Colors.blue),
-                          ),
-                          color: Colors.transparent,
-                        )
-                      : Container()
+                  Text(
+                    "Show Description",
+                    style: TextStyle(color: Colors.blue, fontSize: 10.0),
+                  ),
                 ],
               ),
+            )),
+        Divider(
+          height: 1.0,
+        ),
+        ListTile(
+          title: Text(
+            "Room name: ${widget.room.room_name}",
+            overflow: TextOverflow.ellipsis,
+          ),
+          subtitle: Text(widget.room.floor + " floor"),
+        )
+      ],
+    );
+  }
+
+  _forlocations(MapNotifier value) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        ListTile(
+          tileColor: Colors.white.withOpacity(0.9),
+          title: Text('${value.placeDistance} km'),
+          subtitle: GestureDetector(
+            onTap: () {
+              _showRooms();
+            },
+            child: Text(
+              "Show rooms",
+              style: TextStyle(color: Colors.blue),
             ),
           ),
         ),
-      ),
+      ],
     );
   }
 }

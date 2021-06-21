@@ -1,22 +1,15 @@
 class Activity {
-  int locationId;
-  int performedBy;
+  int id;
   String type;
   String activityPerformed;
 
   Activity.fromjson(Map<String, dynamic> map) {
-    this.locationId = map['Location_id'];
-    this.performedBy = map['Performed_by'];
+    this.id = map['id'];
     this.type = map['Type'];
     this.activityPerformed = map['Change'];
   }
-
-  tojson() {
-    Map<String, dynamic> map;
-    map['Location_id'] = this.locationId;
-    map['Performed_by'] = this.performedBy;
-    map['Type'] = this.type;
-    map['Change'] = this.activityPerformed;
-    return map;
-  }
 }
+
+// https://nile-map.herokuapp.com
+
+// 1|GRCvfecivRZdORr0u951Xo3Q2Ku5YqW8ETOlMzGs
