@@ -10,7 +10,6 @@ import 'package:nilemap_frontend/Widgets/Map.dart';
 import 'package:nilemap_frontend/Widgets/NavigationOptionsContainer.dart';
 import 'package:nilemap_frontend/Widgets/OvalContainer.dart';
 import 'package:nilemap_frontend/Widgets/currentButton.dart';
-import 'package:nilemap_frontend/Widgets/drawer.dart';
 import 'package:nilemap_frontend/Widgets/show_room.dart';
 import 'package:provider/provider.dart';
 import 'package:nilemap_frontend/Logic/backend_requests.dart';
@@ -43,14 +42,6 @@ class _NavigationState extends State<Navigation> {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => MapNotifier()),
-        FutureProvider<List<Room>>(
-          create: (context) {
-            return HttpService().getAllRoomsForALocation(widget.location == null
-                ? widget.room.location.id
-                : widget.location.id);
-          },
-          initialData: [],
-        )
       ],
       child: Container(
         height: height,
@@ -59,14 +50,20 @@ class _NavigationState extends State<Navigation> {
           appBar: AppBar(
             title: Text(
               widget.location == null
-                  ? "Building: ${widget.room.location.name}"
-                  : "Building: ${widget.location.name}",
+                  ? "${widget.room.location.name}"
+                  : "${widget.location.name}",
               style: TextStyle(color: Constants.textColor),
             ),
             backgroundColor: Constants.secTextColor,
             iconTheme: IconThemeData(color: Constants.mainColor),
+            leading: IconButton(
+              icon: Icon(Icons.arrow_back_ios),
+              onPressed: () {
+                positionStream.cancel();
+                Navigator.pop(context);
+              },
+            ),
           ),
-          drawer: MyDrawer(),
           body: Stack(
             children: <Widget>[
               Consumer<MapNotifier>(builder: (_, notifier, __) {

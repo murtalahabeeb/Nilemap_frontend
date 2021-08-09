@@ -55,7 +55,7 @@ class _MultiFormBuilderState extends State<MultiFormBuilder> {
     return Form(
       key: formKey,
       child: Container(
-        padding: EdgeInsets.all(28.0),
+        padding: EdgeInsets.all(5.0),
         width: 500.0,
         child: Card(
             color: Colors.white,
@@ -248,7 +248,7 @@ class _MultiFormBuilderState extends State<MultiFormBuilder> {
                             borderRadius: BorderRadius.circular(20.0),
                           ),
                           child: Padding(
-                            padding: const EdgeInsets.all(8.0),
+                            padding: const EdgeInsets.all(0.0),
                             child: Text(
                               'Edit Room'.toUpperCase(),
                               style: TextStyle(

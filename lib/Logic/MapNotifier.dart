@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:nilemap_frontend/Models/LocationModel.dart';
 import 'package:nilemap_frontend/secrets.dart';
 import 'dart:math' show cos, sqrt, asin;
 
@@ -22,7 +23,7 @@ class MapNotifier extends ChangeNotifier {
 
   StreamSubscription<Position> positionStream;
 
-  LatLng destination;
+  Location destination;
 
   //Position get destination => _destination;
 
@@ -54,12 +55,13 @@ class MapNotifier extends ChangeNotifier {
   setDestMarker() {
     destMarker = Marker(
       markerId: MarkerId(
-          LatLng(destination.latitude, destination.longitude).toString()),
-      position: LatLng(destination.latitude, destination.longitude),
+          LatLng(double.parse(destination.lat), double.parse(destination.long))
+              .toString()),
+      position:
+          LatLng(double.parse(destination.lat), double.parse(destination.long)),
       infoWindow: InfoWindow(
-        title: "title for now",
-        snippet: LatLng(destination.latitude, destination.longitude).toString(),
-      ),
+          title: "title for now",
+          snippet: "${destination.lat}, ${destination.long}"),
       icon: BitmapDescriptor.defaultMarker,
     );
     if (!markers.contains(destMarker)) {
@@ -82,7 +84,7 @@ class MapNotifier extends ChangeNotifier {
       anchor: Offset(0.5, 0.5),
       zIndex: 2,
       infoWindow: InfoWindow(
-        title: "title for now",
+        title: "Current location",
         snippet: latLng.toString(),
       ),
       icon: BitmapDescriptor.fromBytes(imageData),
@@ -110,7 +112,8 @@ class MapNotifier extends ChangeNotifier {
       PolylineResult result = await polylinePoints.getRouteBetweenCoordinates(
         Secrets.API_KEY, // Google Maps API Key
         PointLatLng(currentPosition.latitude, currentPosition.longitude),
-        PointLatLng(destination.latitude, destination.longitude),
+        PointLatLng(
+            double.parse(destination.lat), double.parse(destination.long)),
         travelMode: setNavigationtMode(isSelected),
       );
 
@@ -198,7 +201,8 @@ class MapNotifier extends ChangeNotifier {
   }
 
   // Method for retrieving the current location from phone
-  getCurrentLocation() async {
+  getCurrentLocation(Location location) async {
+    destination = location;
     setDestMarker();
     // When we reach here, permissions are granted and we can
     // continue accessing the position of the device.

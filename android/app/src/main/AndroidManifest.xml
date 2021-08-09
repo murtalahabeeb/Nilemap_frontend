@@ -4,7 +4,7 @@
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
    <application
         android:usesCleartextTraffic="true"
-        android:label="nilemap_frontend"
+        android:label="Nile Map"
         android:icon="@mipmap/ic_launcher">
         <meta-data android:name="com.google.android.geo.API_KEY"
                android:value="AIzaSyCuSBxlVKlMIwKzMsUZPefgEu2hu4xYpxk"/>

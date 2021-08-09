@@ -15,11 +15,11 @@ class HttpService {
   String hosted;
   getplatform() {
     if (Platform.isIOS) {
-      hosted = 'http://localhost:8000/api/';
-      //hosted = 'https://nile-map.herokuapp.com/api/';
+      // hosted = 'http://localhost:8000/api/';
+      hosted = 'https://nile-map.herokuapp.com/api/';
     } else if (Platform.isAndroid) {
-      hosted = 'http://10.0.2.2:8000/api/';
-      //hosted = 'https://nile-map.herokuapp.com/api/';
+      //hosted = 'http://10.0.2.2:8000/api/';
+      hosted = 'https://nile-map.herokuapp.com/api/';
     }
   }
 
@@ -168,7 +168,8 @@ class HttpService {
       var data = jsonDecode(response.body);
       return Admin.fromjson(data);
     } catch (e) {
-      return e;
+      print("thrown");
+      rethrow;
     }
   }
 

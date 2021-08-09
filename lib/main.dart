@@ -48,18 +48,36 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   UserPreferences data;
+  String error;
 
   @override
   void initState() {
     super.initState();
     data = UserPreferences();
-    WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+    WidgetsBinding.instance.addPostFrameCallback((timeStamp) async {
       ServerNotifier notifier =
           Provider.of<ServerNotifier>(context, listen: false);
 
       if (data.id != 0) {
         if (notifier.admin == null) {
-          notifier.user(data.id, data.token);
+          try {
+            await notifier.user(data.id, data.token);
+          } catch (e) {
+            print("caught");
+
+            error = "might have been logged out from another device";
+          }
+          if (error != null) {
+            print(error);
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(error),
+              ),
+            );
+            data.setId(0);
+            data.setToken("");
+          }
+
           // notifier.getLocation();
           // locatio\nNotifier.getUncategorized();
           // roomNotifier.getUncategorizedRooms();
@@ -81,6 +99,7 @@ class _MyHomePageState extends State<MyHomePage> {
     return Consumer<ServerNotifier>(
       builder: (_, notifier, __) {
         return Scaffold(
+            backgroundColor: Constants.secTextColor,
             drawer: MyDrawer(),
             appBar: AppBar(
               title: Text(

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:nilemap_frontend/Models/LocationModel.dart';
-import 'package:nilemap_frontend/Widgets/map_providers.dart';
+import 'package:nilemap_frontend/Screens/Navigationpage.dart';
 
 class UserLocationView extends StatelessWidget {
   UserLocationView(this.loc);
@@ -12,10 +12,7 @@ class UserLocationView extends StatelessWidget {
       onTap: () {
         Navigator.push(
           context,
-          MaterialPageRoute(
-              builder: (context) => GetRoomsProvider(
-                    location: loc,
-                  )),
+          MaterialPageRoute(builder: (context) => Navigation(loc)),
         );
       },
     );

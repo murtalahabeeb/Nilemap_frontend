@@ -18,8 +18,6 @@ class _MapViewState extends State<MapView> {
     return Stack(
       children: [
         Consumer<MapNotifier>(builder: (_, notifier, __) {
-          notifier.destination = LatLng(double.parse(widget.destination.lat),
-              double.parse(widget.destination.long));
           return GoogleMap(
               initialCameraPosition: notifier.initialLocation,
               myLocationEnabled: false,
@@ -37,12 +35,19 @@ class _MapViewState extends State<MapView> {
                   : null,
               onMapCreated: (GoogleMapController controller) async {
                 notifier.mapController = controller;
-                if (await notifier.locationStatus() == null) {
+                String locationError = await notifier.locationStatus();
+                if (locationError == null) {
                   notifier.imageData = await getMarker();
-                  await notifier.getCurrentLocation();
+                  await notifier.getCurrentLocation(widget.destination);
                   await notifier.createPolylines();
                   notifier.getLiveLocation();
-                } else {}
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(locationError),
+                    ),
+                  );
+                }
               });
         }),
       ],

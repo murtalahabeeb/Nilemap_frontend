@@ -3,6 +3,7 @@ import 'package:nilemap_frontend/Widgets/EntryItem.dart';
 import 'package:nilemap_frontend/Widgets/user_loc_view.dart';
 import 'package:nilemap_frontend/Widgets/user_room_view.dart';
 import 'package:provider/provider.dart';
+import 'package:nilemap_frontend/constants.dart' as Constants;
 
 class Home extends StatelessWidget {
   @override

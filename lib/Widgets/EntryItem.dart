@@ -4,6 +4,7 @@ import 'package:nilemap_frontend/Widgets/admin_loc_view.dart';
 import 'package:nilemap_frontend/Widgets/admin_room_view.dart';
 import 'package:nilemap_frontend/Widgets/user_loc_view.dart';
 import 'package:nilemap_frontend/Widgets/user_room_view.dart';
+import 'package:nilemap_frontend/constants.dart' as Constants;
 
 class ExpansionTileItems extends StatelessWidget {
   const ExpansionTileItems(this.entry, this.type);
@@ -21,7 +22,9 @@ class ExpansionTileItems extends StatelessWidget {
   Widget build(BuildContext context) {
     return ExpansionTile(
         key: PageStorageKey<Category>(entry),
-        title: Text(entry.name),
+        title: Text(
+          entry.name,
+        ),
         children: [
           Column(
             children: entry.locations.map<Widget>((loc) {

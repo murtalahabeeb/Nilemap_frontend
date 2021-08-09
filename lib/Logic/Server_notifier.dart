@@ -131,8 +131,12 @@ class ServerNotifier extends ChangeNotifier {
   }
 
   user(user_id, token) async {
-    admin = await req.getUser(user_id, token);
-    notifyListeners();
+    try {
+      admin = await req.getUser(user_id, token);
+      notifyListeners();
+    } catch (e) {
+      rethrow;
+    }
   }
 
   setName(
